@@ -8,13 +8,13 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.graphics.Color;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
+
     private static final int OVERLAY_REQUEST = 701;
 
     @Override
@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
         root.addView(title, matchWrap());
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Panel flotante · versión inicial");
+        subtitle.setText("Panel flotante y demo visual");
         subtitle.setTextColor(Color.LTGRAY);
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(0, 12, 0, 28);
@@ -47,20 +47,37 @@ public class MainActivity extends Activity {
         root.addView(permission, matchWrap());
 
         Button start = new Button(this);
-        start.setText("2. Iniciar panel");
+        start.setText("2. Iniciar burbuja");
         start.setOnClickListener(v -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Primero permite mostrar sobre otras apps.", Toast.LENGTH_LONG).show();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && !Settings.canDrawOverlays(this)) {
+                Toast.makeText(this,
+                        "Primero permite mostrar sobre otras apps.",
+                        Toast.LENGTH_LONG).show();
                 requestOverlayPermission();
                 return;
             }
-            startService(new Intent(this, FloatingPanelService.class));
-            Toast.makeText(this, "Panel iniciado. Abre el juego para probar la superposición.", Toast.LENGTH_LONG).show();
+
+            Intent service = new Intent(this, FloatingPanelService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(service);
+            } else {
+                startService(service);
+            }
+
+            Toast.makeText(this, "Burbuja iniciada",
+                    Toast.LENGTH_SHORT).show();
         });
         root.addView(start, matchWrap());
 
+        Button demo = new Button(this);
+        demo.setText("3. Probar seguimiento visual");
+        demo.setOnClickListener(v ->
+                startActivity(new Intent(this, SeguimientoDemoActivity.class)));
+        root.addView(demo, matchWrap());
+
         TextView note = new TextView(this);
-        note.setText("\nNota: los interruptores son demostrativos. Esta versión no controla el juego.");
+        note.setText("\nLa demo muestra un objetivo de prueba en movimiento.");
         note.setTextColor(Color.rgb(210, 190, 255));
         note.setTextSize(14);
         note.setPadding(4, 24, 4, 0);
@@ -70,12 +87,15 @@ public class MainActivity extends Activity {
     }
 
     private void requestOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent, OVERLAY_REQUEST);
         } else {
-            Toast.makeText(this, "El permiso de panel flotante ya está habilitado.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Permiso habilitado",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
